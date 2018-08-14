@@ -8,6 +8,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets, QtSql
 import sql
+from functions import new_log
 
 class Ui_Debtors(object):
     def setupUi(self, Debtors):
@@ -45,7 +46,20 @@ class Ui_Debtors(object):
 
         self.retranslateUi(Debtors)
         self.btnClose.clicked.connect(Debtors.close)
+        self.btnDelete.clicked.connect(lambda: self.delete_record())
         QtCore.QMetaObject.connectSlotsByName(Debtors)
+        sql.connectDB()
+        model = QtSql.QSqlQueryModel()
+        qry =QtSql.QSqlQuery()
+        qry.exec_("select distinct customer_name from debts")
+        model.setQuery(qry)
+        completer = QtWidgets.QCompleter()
+        completer.setModel(model)
+        completer.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
+        completer.setFilterMode(QtCore.Qt.MatchContains)
+        completer.setCompletionMode(QtWidgets.QCompleter.PopupCompletion)
+        completer.setWidget(self.search)
+        self.search.setCompleter(completer)
 
     def retranslateUi(self, Debtors):
         _translate = QtCore.QCoreApplication.translate
@@ -75,13 +89,40 @@ class Ui_Debtors(object):
         self.model.select()
         self.debtorView.setModel(self.model)
         self.debtorView.horizontalHeader().setMinimumHeight(40)
-        self.debtorView.horizontalHeader().setStyleSheet("background-color:#222;color:#dadada;")
         self.debtorView.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
         self.debtorView.setColumnHidden(0, True)
         self.debtorView.show()
 
-    def deleteSelected(self):
-        self.selected_row = self.debtorView.selectionModel()
+    def delete_record(self):
+        if sql.connectDB():
+            if not self.search.text() == '' and not self.search.text().isspace():
+                confirm = QtWidgets.QMessageBox.question(None, QtWidgets.qApp.tr("Sure to delete?"),
+                                                     QtWidgets.qApp.tr(
+                                                         "Are you sure you want to delete <b>" + self.search.text() +
+                                                         "</b> from Debtors"), QtWidgets.QMessageBox.Yes,
+                                                     QtWidgets.QMessageBox.No)
+
+                if confirm == QtWidgets.QMessageBox.Yes:
+                    query = QtSql.QSqlQuery()
+                    query.prepare("select * from debts where customer_name = '{0}'".format(self.search.text()))
+                    if not query.exec_():
+                        QtWidgets.QMessageBox.information(None, QtWidgets.qApp.tr("Debtor not found!"),
+                                                          QtWidgets.qApp.tr(self.search.text().capitalize() + " not found!"),
+                                                          QtWidgets.QMessageBox.Ok)
+                    else:
+                        query.prepare("delete from debts where customer_name = ?")
+                        query.bindValue(0, self.search.text())
+                        if query.exec_():
+                            operation = "Deleted " + self.search.text() + " from debtors"
+                            new_log(self.get_current_user(), operation)
+                            self.update_view()
+                            QtWidgets.QMessageBox.information(None, QtWidgets.qApp.tr("Debtor deleted!"),
+                                                              QtWidgets.qApp.tr("Debtor has been deleted"),
+                                                              QtWidgets.QMessageBox.Ok)
+                        else:
+                            QtWidgets.QMessageBox.critical(None, QtWidgets.qApp.tr("Debtor not deleted!"),
+                                                       QtWidgets.qApp.tr("Debtor couldn't be deleted"),
+                                                       QtWidgets.QMessageBox.Ok)
 
     def get_debtor(self):
 

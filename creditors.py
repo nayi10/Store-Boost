@@ -8,6 +8,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets, QtSql
 import sql
+from editcreditors import *
 
 class Ui_Creditors(object):
     def setupUi(self, Creditors):
@@ -43,8 +44,19 @@ class Ui_Creditors(object):
         self.btnClose = QtWidgets.QPushButton(Creditors)
         self.btnClose.setGeometry(QtCore.QRect(790, 530, 99, 41))
         self.btnClose.setObjectName("btnClose")
-
+        sql.connectDB()
+        complet = QtWidgets.QCompleter()
+        complet.setFilterMode(QtCore.Qt.MatchContains)
+        complet.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
+        complet.setCompletionMode(QtWidgets.QCompleter.PopupCompletion)
+        qery = QtSql.QSqlQuery()
+        qery.exec_("select creditor_name from creditors")
+        modal = QtSql.QSqlQueryModel()
+        modal.setQuery(qery)
+        self.search_query.setCompleter(complet)
+        complet.setModel(modal)
         self.retranslateUi(Creditors)
+        self.search_query.textChanged.connect(lambda: self.get_creditor())
         self.btnClose.clicked.connect(Creditors.close)
         QtCore.QMetaObject.connectSlotsByName(Creditors)
 
@@ -56,7 +68,6 @@ class Ui_Creditors(object):
         self.btnDelete.setText(_translate("Creditors", "Delete"))
         self.btnNewCreditor.setText(_translate("Creditors", "New Creditor"))
         self.btnClose.setText(_translate("Creditors", "Close"))
-
 
     def display_creditors(self):
         sql.connectDB()
@@ -74,7 +85,6 @@ class Ui_Creditors(object):
         self.model.select()
         self.creditorView.setModel(self.model)
         self.creditorView.horizontalHeader().setMinimumHeight(40)
-        self.creditorView.horizontalHeader().setStyleSheet("background-color:#222;color:#dadada;")
         self.creditorView.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
         self.creditorView.horizontalHeader().setDefaultSectionSize(120)
         self.creditorView.setColumnHidden(0, True)
@@ -82,10 +92,7 @@ class Ui_Creditors(object):
 
     def get_creditor(self):
 
-        if self.search_query.text() == '' or self.search_query.text().isspace():
-            QtWidgets.QMessageBox.critical(None, QtWidgets.qApp.tr("Enter search query"), QtWidgets.qApp.tr(
-                "Please enter search criterion to search!"), QtWidgets.QMessageBox.Ok)
-        else:
+        if not self.search_query.text() == '' or not self.search_query.text().isspace():
             qry = QtSql.QSqlQuery()
             qry.prepare("select * from creditors where creditor_name LIKE '%{0}%' or product_name LIKE '%{0}%' or "
                         "due_date LIKE '%{0}%'".format(str(self.search_query.text())))
@@ -102,10 +109,8 @@ class Ui_Creditors(object):
                 self.model.setHeaderData(6, QtCore.Qt.Horizontal, "Total")
                 self.model.setHeaderData(7, QtCore.Qt.Horizontal, "Quantity")
                 self.model.setHeaderData(8, QtCore.Qt.Horizontal, "Due")
-                self.model.select()
                 self.creditorView.setModel(self.model)
                 self.creditorView.horizontalHeader().setMinimumHeight(40)
-                self.creditorView.horizontalHeader().setStyleSheet("background-color:#222;color:#dadada;")
                 self.creditorView.setSelectionBehavior(QtWidgets.QTableView.SelectRows)
                 self.creditorView.setColumnHidden(0, True)
                 self.creditorView.show()

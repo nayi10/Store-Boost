@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'categories.ui'
+# Form implementation generated from reading ui file 'UI/categories.ui'
 #
 # Created by: PyQt5 UI code generator 5.10.1
 #
@@ -12,21 +12,16 @@ import sql
 class Ui_Category(object):
     def setupUi(self, Category):
         Category.setObjectName("Category")
-        Category.resize(668, 523)
+        Category.resize(671, 523)
         Category.setMinimumSize(QtCore.QSize(0, 0))
-        Category.setMaximumSize(QtCore.QSize(668, 540))
-        self.buttonBox = QtWidgets.QDialogButtonBox(Category)
-        self.buttonBox.setGeometry(QtCore.QRect(270, 470, 341, 32))
-        self.buttonBox.setOrientation(QtCore.Qt.Horizontal)
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Close)
-        self.buttonBox.setObjectName("buttonBox")
+        Category.setMaximumSize(QtCore.QSize(729, 540))
         self.groupBox_2 = QtWidgets.QGroupBox(Category)
-        self.groupBox_2.setGeometry(QtCore.QRect(40, 390, 381, 61))
+        self.groupBox_2.setGeometry(QtCore.QRect(40, 430, 471, 71))
         self.groupBox_2.setStyleSheet("border:1px solid #ccc;")
         self.groupBox_2.setTitle("")
         self.groupBox_2.setObjectName("groupBox_2")
         self.categoryName = QtWidgets.QLineEdit(self.groupBox_2)
-        self.categoryName.setGeometry(QtCore.QRect(100, 20, 261, 27))
+        self.categoryName.setGeometry(QtCore.QRect(100, 19, 351, 31))
         self.categoryName.setObjectName("categoryName")
         self.label_2 = QtWidgets.QLabel(self.groupBox_2)
         self.label_2.setGeometry(QtCore.QRect(10, 10, 81, 41))
@@ -39,7 +34,7 @@ class Ui_Category(object):
         self.label_2.setLineWidth(0)
         self.label_2.setObjectName("label_2")
         self.categoryView = QtWidgets.QListView(Category)
-        self.categoryView.setGeometry(QtCore.QRect(40, 128, 591, 251))
+        self.categoryView.setGeometry(QtCore.QRect(40, 128, 591, 281))
         self.categoryView.setStyleSheet("border:2px solid #dcdcdc;")
         self.categoryView.setObjectName("categoryView")
         self.label = QtWidgets.QLabel(Category)
@@ -58,36 +53,44 @@ class Ui_Category(object):
         self.label.setAlignment(QtCore.Qt.AlignCenter)
         self.label.setObjectName("label")
         self.groupBox_3 = QtWidgets.QGroupBox(Category)
-        self.groupBox_3.setGeometry(QtCore.QRect(40, 0, 410, 71))
-        self.groupBox_3.setTitle("")
+        self.groupBox_3.setGeometry(QtCore.QRect(40, 0, 231, 71))
         self.groupBox_3.setObjectName("groupBox_3")
         self.filter = QtWidgets.QLineEdit(self.groupBox_3)
-        self.filter.setGeometry(QtCore.QRect(70, 30, 261, 27))
+        self.filter.setGeometry(QtCore.QRect(10, 30, 211, 31))
         self.filter.setObjectName("filter")
-        self.btnFilter = QtWidgets.QPushButton(self.groupBox_3)
-        self.btnFilter.setObjectName("btnFilter")
-        self.btnFilter.setGeometry(QtCore.QRect(335, 30, 65, 27))
-        self.label_4 = QtWidgets.QLabel(self.groupBox_3)
-        self.label_4.setGeometry(QtCore.QRect(20, 30, 51, 31))
-        font = QtGui.QFont()
-        font.setPointSize(12)
-        font.setBold(True)
-        font.setWeight(75)
-        self.label_4.setFont(font)
-        self.label_4.setObjectName("label_4")
         self.btnUpdate = QtWidgets.QPushButton(Category)
-        self.btnUpdate.setGeometry(QtCore.QRect(430, 400, 100, 41))
+        self.btnUpdate.setGeometry(QtCore.QRect(520, 430, 111, 31))
         self.btnUpdate.setObjectName("btnUpdate")
         self.btnSave = QtWidgets.QPushButton(Category)
-        self.btnSave.setGeometry(QtCore.QRect(550, 400, 80, 41))
+        self.btnSave.setGeometry(QtCore.QRect(520, 470, 111, 31))
         self.btnSave.setObjectName("btnSave")
-        self.btnDelete = QtWidgets.QPushButton(Category)
-        self.btnDelete.setGeometry(QtCore.QRect(480, 25, 140, 41))
+        self.groupBox_4 = QtWidgets.QGroupBox(Category)
+        self.groupBox_4.setGeometry(QtCore.QRect(300, 0, 331, 71))
+        self.groupBox_4.setObjectName("groupBox_4")
+        self.delete_select = QtWidgets.QComboBox(self.groupBox_4)
+        self.delete_select.setGeometry(QtCore.QRect(10, 30, 231, 31))
+        self.delete_select.setObjectName("delete_select")
+        self.btnDelete = QtWidgets.QPushButton(self.groupBox_4)
+        self.btnDelete.setGeometry(QtCore.QRect(250, 30, 71, 31))
         self.btnDelete.setObjectName("btnDelete")
 
+        sql.connectDB()
+        model = QtSql.QSqlQueryModel()
+        qry = QtSql.QSqlQuery()
+        qry.exec_("select distinct name from categories")
+        model.setQuery(qry)
+        self.categoryView.setModel(model)
+        self.delete_select.setModel(model)
+        completer = QtWidgets.QCompleter()
+        completer.setModel(model)
+        completer.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
+        completer.setFilterMode(QtCore.Qt.MatchContains)
+        completer.setCompletionMode(QtWidgets.QCompleter.PopupCompletion)
+        completer.setWidget(self.filter)
+        self.filter.setCompleter(completer)
+        self.filter.textChanged.connect(lambda: self.get_category())
+
         self.retranslateUi(Category)
-        self.buttonBox.accepted.connect(Category.accept)
-        self.buttonBox.rejected.connect(Category.reject)
         QtCore.QMetaObject.connectSlotsByName(Category)
 
     def retranslateUi(self, Category):
@@ -95,27 +98,58 @@ class Ui_Category(object):
         Category.setWindowTitle(_translate("Category", "Categories"))
         self.label_2.setText(_translate("Category", "Category"))
         self.label.setText(_translate("Category", "Categories"))
+        self.groupBox_3.setTitle(_translate("Category", "Filter"))
         self.filter.setPlaceholderText(_translate("Category", "Filter"))
-        self.label_4.setText(_translate("Category", "Filter"))
-        self.btnFilter.setText(_translate("Category", "Filter"))
-        self.btnUpdate.setText(_translate("Category", "Update"))
-        self.btnSave.setText(_translate("Category", "Save"))
-        self.btnDelete.setText(_translate("Category", "Delete Selected"))
+        self.btnUpdate.setText(_translate("Category", "Update Item"))
+        self.btnSave.setText(_translate("Category", "Save New"))
+        self.groupBox_4.setTitle(_translate("Category", "Delete item"))
+        self.btnDelete.setText(_translate("Category", "Delete"))
 
-    
+
+    def stylesheet(self):
+        return """
+
+            QListView::item {
+                padding: 10px 20px;
+            }
+
+            * {
+                font-size:14px;
+            }
+
+            QTableView::horizontalHeader{
+                background-color: #111111;
+                color: #efefef;
+            }
+
+            QPushButton:hover{
+            background-color:#ffffff;
+            color: #222222;
+            }
+
+            QPushButton{
+            background-color: #cdcdcd;
+            }
+
+            QTableView::row{
+            padding:15px;
+            }
+
+            QTableView::column{
+            padding:15px;
+            }
+
+        """
     def get_category(self):
-
-        if self.filter.text() == '' or self.filter.text().isspace():
-            QtWidgets.QMessageBox.critical(None, QtWidgets.qApp.tr("Enter filter query"), QtWidgets.qApp.tr(
-                "Please enter filter criterion to filter!"), QtWidgets.QMessageBox.Ok)
-        else:
+        sql.connectDB()
+        if not self.filter.text() == '' or not self.filter.text().isspace():
             qry = QtSql.QSqlQuery()
-            qry.prepare("select name from categories where id LIKE '%{0}%' or name LIKE '%{0}%'".format(str(
+            qry.prepare("select name from categories where name LIKE '%{0}%'".format(str(
                 self.filter.text())))
             if qry.exec_():
-                model = QtSql.QSqlQueryModel()
-                model.setQuery(qry)
-                self.categoryView.setModel(model)
+                self.model = QtSql.QSqlQueryModel()
+                self.model.setQuery(qry)
+                self.categoryView.setModel(self.model)
                 self.categoryView.show()
 
 

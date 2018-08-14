@@ -6,7 +6,8 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets, QtSql
+import sql
 
 class Ui_Supplier(object):
     def setupUi(self, Supplier):
@@ -114,23 +115,16 @@ class Ui_Supplier(object):
         self.btnGroup.setObjectName("btnGroup")
         self.btnSave = QtWidgets.QPushButton(self.btnGroup)
         self.btnSave.setGeometry(QtCore.QRect(468, 10, 81, 31))
-        self.btnSave.setStyleSheet("color: rgb(255, 255, 255);\n"
-"selection-background-color: rgb(85, 170, 127);\n"
-"background-color: rgb(0, 85, 0);\n"
-"alternate-background-color: rgb(0, 170, 0);")
         self.btnSave.setObjectName("btnSave")
         self.btnClose = QtWidgets.QPushButton(self.btnGroup)
         self.btnClose.setGeometry(QtCore.QRect(50, 10, 81, 31))
-        self.btnClose.setStyleSheet("background-color: rgb(170, 0, 0);\n"
-"color: rgb(255, 255, 255);\n"
-"selection-background-color: rgb(255, 0, 0);\n"
-"alternate-background-color: rgb(255, 0, 127);")
         self.btnClose.setObjectName("btnClose")
         Supplier.setCentralWidget(self.centralWidget)
 
         self.retranslateUi(Supplier)
         self.btnClose.clicked.connect(Supplier.close)
         QtCore.QMetaObject.connectSlotsByName(Supplier)
+
 
     def retranslateUi(self, Supplier):
         _translate = QtCore.QCoreApplication.translate
@@ -151,12 +145,22 @@ class Ui_Supplier(object):
         self.btnClose.setText(_translate("Supplier", "Close"))
 
 
+    def populate(self):
+        if sql.connectDB():
+            self.model = QtSql.QSqlQueryModel()
+            self.query = QtSql.QSqlQuery()
+            self.query.exec_("select distinct name from suppliers")
+            self.model.setQuery(self.query)
+            self.supplierName.setModel(self.model)
+
+
 if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
     Supplier = QtWidgets.QMainWindow()
     ui = Ui_Supplier()
     ui.setupUi(Supplier)
+    ui.populate()
     Supplier.show()
     sys.exit(app.exec_())
 

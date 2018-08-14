@@ -8,6 +8,8 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets, QtSql
 import sql
+import sqlite3
+from functions import *
 
 class Ui_Stock(object):
     def setupUi(self, Stock):
@@ -31,9 +33,9 @@ class Ui_Stock(object):
         self.label_3 = QtWidgets.QLabel(Stock)
         self.label_3.setGeometry(QtCore.QRect(30, 120, 101, 17))
         self.label_3.setObjectName("label_3")
-        self.lineEdit = QtWidgets.QLineEdit(Stock)
-        self.lineEdit.setGeometry(QtCore.QRect(140, 116, 211, 27))
-        self.lineEdit.setObjectName("lineEdit")
+        self.quantity = QtWidgets.QLineEdit(Stock)
+        self.quantity.setGeometry(QtCore.QRect(140, 116, 211, 27))
+        self.quantity.setObjectName("quantity")
         self.btnUpdate = QtWidgets.QPushButton(Stock)
         self.btnUpdate.setGeometry(QtCore.QRect(190, 190, 121, 41))
         self.btnUpdate.setObjectName("btnUpdate")
@@ -52,6 +54,8 @@ class Ui_Stock(object):
         self.btnRefresh.setIcon(icon)
         self.btnRefresh.setIconSize(QtCore.QSize(20, 20))
         self.btnRefresh.setObjectName("btnRefresh")
+        self.btnClose.clicked.connect(Stock.close)
+        self.btnUpdate.clicked.connect(lambda: self.update_stock())
 
         self.retranslateUi(Stock)
         QtCore.QMetaObject.connectSlotsByName(Stock)
@@ -61,7 +65,7 @@ class Ui_Stock(object):
         Stock.setWindowTitle(_translate("Stock", "New Stock"))
         self.label.setText(_translate("Stock", "Select Product:"))
         self.label_2.setText(_translate("Stock", "Old Quantity:"))
-        self.txtQuantity.setText(_translate("Stock", "0"))
+        self.txtQuantity.setText(_translate("Stock", ""))
         self.label_3.setText(_translate("Stock", "New Quantity:"))
         self.btnUpdate.setText(_translate("Stock", "Update Stock"))
         self.btnClose.setText(_translate("Stock", "Close"))
@@ -75,11 +79,37 @@ class Ui_Stock(object):
             self.productName.setModel(model)
 
     def details(self):
-        model = QtSql.QSqlQueryModel()
-        query = QtSql.QSqlQuery()
-        query.exec_("select product_price from products")
-        model.setQuery(query)
-        self.txtQuantity.setText(str(query.result()))
+        sqlite = sqlite3.connect("ims.db")
+        if sqlite3:
+            query = sqlite.cursor()
+            query.execute("select quantity from products where product_name = '{0}'".format(
+                str(self.productName.currentText())))
+            item = query.fetchall()
+            self.txtQuantity.setText(str(item[0][0]))
+
+    def update_stock(self):
+        if sql.connectDB():
+            query = QtSql.QSqlQuery()
+
+            if self.quantity.text() == "" or self.quantity.text().isspace():
+                QtWidgets.QMessageBox.information(None, QtWidgets.qApp.tr("Quantity is empty"),
+                                                  QtWidgets.qApp.tr("\nPlease enter new product quantity"),
+                                                  QtWidgets.QMessageBox.Ok)
+            else:
+                query.prepare(
+                    "UPDATE products SET quantity = ? WHERE product_name = ?")
+                query.bindValue(1, self.productName.currentText())
+                query.bindValue(0, self.quantity.text())
+
+                if query.exec_():
+                    QtWidgets.QMessageBox.information(None, QtWidgets.qApp.tr("Updated Successfully"),
+                                                      QtWidgets.qApp.tr("\nProduct stock has been successfully updated"),
+                                                      QtWidgets.QMessageBox.Ok)
+                else:
+                    QtWidgets.QMessageBox.information(None, QtWidgets.qApp.tr("Not Updated"),
+                                                      QtWidgets.qApp.tr("Data update not successful"),
+                                                      QtWidgets.QMessageBox.Ok)
+
 
 if __name__ == "__main__":
     import sys
